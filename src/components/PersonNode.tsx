@@ -36,7 +36,6 @@ export default function PersonNode({ data }: { data: any }) {
   );
 
   const mainGender = data.raw?.Gender?.toLowerCase() || '';
-  const spouseGender = data.spouse?.raw?.Gender?.toLowerCase() || '';
   
   const mainIsFemale = mainGender === 'female';
   
