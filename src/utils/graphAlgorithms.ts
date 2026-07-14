@@ -14,10 +14,8 @@ const getRole = (p: any) => {
 
 const computeDepths = (people: any[]): Map<string, number> => {
   const depths = new Map<string, number>();
-  const peopleMap = new Map<string, any>();
   
   people.forEach(p => {
-    peopleMap.set(p[CSV_COLUMNS.EMAIL], p);
     depths.set(p[CSV_COLUMNS.EMAIL], 0);
   });
 
@@ -31,29 +29,42 @@ const computeDepths = (people: any[]): Map<string, number> => {
     people.forEach(p => {
       const email = p[CSV_COLUMNS.EMAIL];
       let currentDepth = depths.get(email)!;
-      let newDepth = currentDepth;
 
       const parentEmail = p[CSV_COLUMNS.PARENT_EMAIL];
       if (parentEmail && parentEmail !== 'NULL' && depths.has(parentEmail)) {
-        const expectedFromParent = depths.get(parentEmail)! + 1;
-        if (expectedFromParent > newDepth) {
-          newDepth = expectedFromParent;
+        const pDepth = depths.get(parentEmail)!;
+        if (pDepth + 1 > currentDepth) {
+          currentDepth = pDepth + 1;
+          depths.set(email, currentDepth);
+          changed = true;
         }
       }
 
       const spouseEmail = p[CSV_COLUMNS.SPOUSE_EMAIL];
       if (spouseEmail && spouseEmail !== 'NULL' && depths.has(spouseEmail)) {
-        const expectedFromSpouse = depths.get(spouseEmail)!;
-        if (expectedFromSpouse > newDepth) {
-          newDepth = expectedFromSpouse;
+        const sDepth = depths.get(spouseEmail)!;
+        if (sDepth > currentDepth) {
+          currentDepth = sDepth;
+          depths.set(email, currentDepth);
+          changed = true;
         }
       }
 
-      if (newDepth !== currentDepth) {
-        depths.set(email, newDepth);
-        changed = true;
+      // Push UP to parent
+      if (parentEmail && parentEmail !== 'NULL' && depths.has(parentEmail)) {
+        const expectedParentDepth = currentDepth - 1;
+        if (expectedParentDepth > depths.get(parentEmail)!) {
+          depths.set(parentEmail, expectedParentDepth);
+          changed = true;
+        }
       }
     });
+  }
+
+  let minD = Infinity;
+  depths.forEach(d => { if (d < minD) minD = d; });
+  if (minD < 0) {
+    depths.forEach((d, k) => depths.set(k, d - minD));
   }
 
   return depths;
@@ -71,18 +82,16 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
   const renderedNodes = new Set<string>();
   const personToNodeId = new Map<string, string>();
 
-  const createNodeData = (p: any, isEndpoint: boolean, includeSpouse: boolean) => {
+  const createNodeData = (p: any, includeSpouse: boolean) => {
     const email = p[CSV_COLUMNS.EMAIL];
-    const spouseEmail = p[CSV_COLUMNS.SPOUSE_EMAIL];
-    const isInPath = pathFound.includes(email) || (spouseEmail && spouseEmail !== 'NULL' && pathFound.includes(spouseEmail));
 
     const nodeData: any = {
       name: p[CSV_COLUMNS.NAME],
       image: p[CSV_COLUMNS.IMAGE] ? `/${p[CSV_COLUMNS.IMAGE].replace('public/', '')}` : getAvatarFallback(p[CSV_COLUMNS.GENDER]),
       fallbackImage: getAvatarFallback(p[CSV_COLUMNS.GENDER]),
       role: getRole(p),
-      isEndpoint,
-      isInPath,
+      isEndpoint: email === personA[CSV_COLUMNS.EMAIL] || email === personB[CSV_COLUMNS.EMAIL],
+      isInPath: pathFound.includes(email),
       raw: p,
       depth: depths.get(p[CSV_COLUMNS.EMAIL]) ?? 0,
       onInfoClick
@@ -99,7 +108,9 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
             fallbackImage: getAvatarFallback(spouse[CSV_COLUMNS.GENDER]),
             role: getRole(spouse),
             raw: spouse,
-            isDummy: false
+            isDummy: false,
+            isEndpoint: spouseEmail === personA[CSV_COLUMNS.EMAIL] || spouseEmail === personB[CSV_COLUMNS.EMAIL],
+            isInPath: pathFound.includes(spouseEmail)
           };
         }
       }
@@ -108,7 +119,7 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
     return nodeData;
   };
 
-  const addNode = (email: string, isEndpoint: boolean, includeSpouse: boolean) => {
+  const addNode = (email: string, includeSpouse: boolean) => {
     if (renderedNodes.has(email)) return;
     const p = peopleMap.get(email);
     if (!p) return;
@@ -120,7 +131,7 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
     initialNodes.push({
       id: email,
       type: 'person',
-      data: createNodeData(p, isEndpoint, willIncludeSpouse),
+      data: createNodeData(p, willIncludeSpouse),
       position: { x: 0, y: 0 }
     });
     
@@ -224,7 +235,6 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
 
   emailsToRender.forEach(email => {
     if (!renderedNodes.has(email)) {
-      const isEndpoint = email === personA[CSV_COLUMNS.EMAIL] || email === personB[CSV_COLUMNS.EMAIL];
       const p = peopleMap.get(email);
       const spouseEmail = p?.[CSV_COLUMNS.SPOUSE_EMAIL];
       
@@ -240,7 +250,7 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
         }
       }
 
-      addNode(email, isEndpoint, includeSpouse);
+      addNode(email, includeSpouse);
     }
   });
 
@@ -269,16 +279,14 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
           initialEdges.push({
             id: edgeId,
             source: sourceId,
+            sourceHandle: `source-${parentEmail}`,
             target: targetId,
-            type: 'smoothstep',
-            animated: isActive,
+            targetHandle: `target-${childEmail}`,
+            type: 'custom',
+            animated: viewMode === 'all' ? false : isActive,
+            zIndex: isActive ? 10 : 0,
             markerEnd: { type: MarkerType.ArrowClosed },
-            style: { 
-              stroke: isActive ? '#2563eb' : '#94a3b8', 
-              strokeWidth: isActive ? 4 : 1.5,
-              filter: isActive ? 'drop-shadow(0 0 5px rgba(37, 99, 235, 0.5))' : 'none',
-              transition: 'all 0.3s ease'
-            }
+            data: { isBlue: isActive, offsetLevel: 0 }
           });
         }
       }

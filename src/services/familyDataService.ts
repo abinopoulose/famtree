@@ -4,9 +4,9 @@ import { CSV_COLUMNS } from '../constants';
 const CACHE_KEY = 'familyTreeData';
 const CACHE_EXPIRATION = 5 * 60 * 60 * 1000; // 5 hours in milliseconds
 
-export const fetchFamilyData = async (): Promise<any[]> => {
+export const fetchFamilyData = async (forceRefresh: boolean = false): Promise<any[]> => {
   const cachedDataString = localStorage.getItem(CACHE_KEY);
-  if (cachedDataString) {
+  if (cachedDataString && !forceRefresh) {
     try {
       const cachedData = JSON.parse(cachedDataString);
       const now = new Date().getTime();
@@ -46,6 +46,10 @@ export const fetchFamilyData = async (): Promise<any[]> => {
   const res = await fetch('/data.csv');
   const csv = await res.text();
   
+  return parseCSVString(csv);
+};
+
+export const parseCSVString = (csv: string): Promise<any[]> => {
   return new Promise((resolve) => {
     Papa.parse(csv, {
       header: true,
