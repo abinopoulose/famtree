@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import About from './pages/About';
 import FamilyTree from './pages/FamilyTree';
+import Ancestors from './pages/Ancestors';
 
 function App() {
   const [isDark, setIsDark] = useState(false);
@@ -25,10 +26,12 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/family-tree" element={<FamilyTree />} />
+            <Route path="/ancestors" element={<Ancestors />} />
           </Routes>
           
           {/* Hanging CSS Bulb */}
           <div 
+            id="theme-bulb"
             className="absolute top-0 right-10 md:right-16 z-[9999] flex flex-col items-center cursor-pointer group origin-top animate-[sway_3s_ease-in-out_infinite] hover:animate-none"
             onClick={() => setIsDark(!isDark)}
             title="Toggle Theme"

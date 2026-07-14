@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import ReactFlow, { Background, Controls, ConnectionLineType, useNodesState, useEdgesState } from 'reactflow';
-import { Menu, Upload, RefreshCw, X } from 'lucide-react';
+import { Upload, RefreshCw, X } from 'lucide-react';
 import 'reactflow/dist/style.css';
 
 import PersonDropdown from '../components/PersonDropdown';
@@ -8,7 +8,7 @@ import PersonNode from '../components/PersonNode';
 import CustomEdge from '../components/CustomEdge';
 import InfoModal from '../components/InfoModal';
 import { fetchFamilyData, parseCSVString } from '../services/familyDataService';
-import { calculateGraph } from '../utils/graphAlgorithms';
+import { calculateAncestorsGraph } from '../utils/ancestorAlgorithms';
 import { getLayoutedElements } from '../utils/layoutEngine';
 
 const nodeTypes = {
@@ -19,32 +19,24 @@ const edgeTypes = {
   custom: CustomEdge,
 };
 
-export default function FamilyTree() {
+export default function Ancestors() {
   const [people, setPeople] = useState<any[]>([]);
-  const [personA, setPersonA] = useState<any>(null);
-  const [personB, setPersonB] = useState<any>(null);
+  const [person, setPerson] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-
-  const [viewMode, setViewMode] = useState<'original' | 'spouse' | 'all'>('original');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [modalData, setModalData] = useState<any>(null);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [bounds, setBounds] = useState<any>();
-  
+
   const [showDataModal, setShowDataModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const menuRef = useRef<HTMLDivElement>(null);
 
   const handleFetchDefault = async () => {
     setLoading(true);
     setShowDataModal(false);
     const data = await fetchFamilyData(true);
     setPeople(data);
-    setPersonA(null);
-    setPersonB(null);
+    setPerson(null);
     setLoading(false);
   };
 
@@ -60,24 +52,13 @@ export default function FamilyTree() {
         setShowDataModal(false);
         const data = await parseCSVString(csvString);
         setPeople(data);
-        setPersonA(null);
-        setPersonB(null);
+        setPerson(null);
         setLoading(false);
       }
     };
     reader.readAsText(file);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as globalThis.Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   useEffect(() => {
     fetchFamilyData().then(data => {
@@ -93,31 +74,37 @@ export default function FamilyTree() {
   }, [showDataModal]);
 
   const buildGraph = useCallback(() => {
-    const { nodes: initNodes, edges: initEdges } = calculateGraph(people, personA, personB, viewMode, setModalData);
+    console.log('[Ancestors] Building graph for:', person?.Name, person?.Email);
+    const { nodes: initNodes, edges: initEdges } = calculateAncestorsGraph(people, person, setModalData);
+    console.log('[Ancestors] Raw nodes from calculateAncestorsGraph:', initNodes.length, initNodes);
+    console.log('[Ancestors] Raw edges from calculateAncestorsGraph:', initEdges.length, initEdges);
+
     if (initNodes.length > 0) {
-      const { nodes: layoutedNodes, edges: layoutedEdges, bounds: layoutBounds } = getLayoutedElements(initNodes, initEdges);
+      const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutedElements(initNodes, initEdges);
+      console.log('[Ancestors] Layouted nodes:', layoutedNodes.length, layoutedNodes);
       setNodes(layoutedNodes);
       setEdges(layoutedEdges);
-      setBounds(layoutBounds);
     } else {
+      console.log('[Ancestors] No nodes to display');
       setNodes([]);
       setEdges([]);
-      setBounds(undefined);
     }
-  }, [personA, personB, people, viewMode, setNodes, setEdges]);
+  }, [people, person, setNodes, setEdges]);
 
   useEffect(() => {
     buildGraph();
   }, [buildGraph]);
 
-  if (loading) return <div className="h-[90dvh] flex items-center justify-center text-slate-500 font-medium tracking-wide">Loading family database...</div>;
-
   return (
-    <div className="flex flex-col w-full bg-slate-50 dark:bg-slate-950 pb-12">
-      
+    <div className="flex flex-col w-full h-full bg-slate-50 dark:bg-slate-950 transition-colors duration-300 pb-12">
       <div className="flex gap-6 flex-wrap justify-center p-6 z-[60] relative shrink-0">
-        <PersonDropdown label="Select Person A" people={people} selectedPerson={personA} onSelect={setPersonA} />
-        <PersonDropdown label="Select Person B" people={people} selectedPerson={personB} onSelect={setPersonB} />
+        <PersonDropdown 
+          label="Select Person"
+          people={people} 
+          selectedPerson={person} 
+          onSelect={setPerson} 
+          placeholder="Select a person..." 
+        />
       </div>
 
       <div className="w-full flex justify-center px-4 relative">
@@ -125,8 +112,7 @@ export default function FamilyTree() {
           className="relative overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2rem] shadow-2xl w-[90%] md:w-[80%] ring-1 ring-black/5 dark:ring-white/5"
           style={{ height: '90vh' }}
         >
-          
-          <div ref={menuRef} className="absolute top-5 right-5 z-[40] flex gap-2">
+          <div className="absolute top-5 right-5 z-[40] flex gap-2">
             <button 
               onClick={() => setShowDataModal(true)} 
               className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 cursor-pointer text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -134,47 +120,37 @@ export default function FamilyTree() {
             >
               <Upload size={20} />
             </button>
-            
-            <div className="relative">
-              <button 
-                onClick={() => setMenuOpen(!menuOpen)} 
-                className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 cursor-pointer text-slate-700 dark:text-slate-200 flex items-center justify-center shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <Menu size={20} />
-              </button>
-              
-              {menuOpen && (
-                <div className="absolute top-[calc(100%+0.5rem)] right-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-2 min-w-[260px] flex flex-col shadow-2xl">
-                  <button onClick={() => { setViewMode('original'); setMenuOpen(false); }} className={`px-4 py-3 text-left rounded-xl cursor-pointer text-sm font-semibold transition-colors ${viewMode === 'original' ? 'bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}>Original View (Default)</button>
-                  <button onClick={() => { setViewMode('spouse'); setMenuOpen(false); }} className={`px-4 py-3 text-left rounded-xl cursor-pointer text-sm font-semibold transition-colors ${viewMode === 'spouse' ? 'bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}>Show Spouse at All Nodes</button>
-                  <button onClick={() => { setViewMode('all'); setMenuOpen(false); }} className={`px-4 py-3 text-left rounded-xl cursor-pointer text-sm font-semibold transition-colors ${viewMode === 'all' ? 'bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}>Show all the family chain</button>
-                </div>
-              )}
-            </div>
           </div>
 
-          {nodes.length > 0 ? (
-            <ReactFlow 
-              key={`${personA?.Email || ''}-${personB?.Email || ''}-${viewMode}`}
-              nodes={nodes} 
-              edges={edges} 
-              onNodesChange={onNodesChange} 
-              onEdgesChange={onEdgesChange} 
-              nodeTypes={nodeTypes} 
-              edgeTypes={edgeTypes}
-              connectionLineType={ConnectionLineType.SmoothStep} 
-              fitView 
-              minZoom={0.1} 
-              nodesDraggable={false} 
-              translateExtent={bounds as any}
-            >
-              <Background color="currentColor" className="text-slate-300 dark:text-slate-700" gap={24} size={1.5} />
-              <Controls className="!bg-white/80 dark:!bg-slate-900/80 backdrop-blur-md !border-slate-200 dark:!border-slate-700 !rounded-xl !overflow-hidden shadow-lg !m-6 [&>button]:!border-slate-200 dark:[&>button]:!border-slate-700 [&>button]:dark:!bg-slate-900 [&>button]:dark:!fill-slate-300" />
-            </ReactFlow>
-          ) : (
-            <div className="h-full flex items-center justify-center text-center px-6 text-slate-500 dark:text-slate-400 font-medium">
-              {personA && personB ? 'No relationship path found between the selected people.' : 'Select two people to see their relationship.'}
+          {!person ? (
+            <div className="flex items-center justify-center h-full text-slate-400 dark:text-slate-500 text-lg font-medium text-center px-6">
+              Select a person to trace their lineage backwards through time.
             </div>
+          ) : loading ? (
+            <div className="flex items-center justify-center h-full">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+            </div>
+          ) : (
+            <ReactFlow
+              key={person?.Email || 'empty'}
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              connectionLineType={ConnectionLineType.SmoothStep}
+              fitView
+              fitViewOptions={{ padding: 0.2 }}
+              minZoom={0.1}
+              maxZoom={1.5}
+              nodesDraggable={false}
+              nodesConnectable={false}
+              className="bg-slate-50/50 dark:bg-slate-950/50"
+            >
+              <Background color="#94a3b8" gap={24} size={1} />
+              <Controls className="bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 fill-slate-700 dark:fill-slate-300" />
+            </ReactFlow>
           )}
         </div>
       </div>
@@ -182,7 +158,7 @@ export default function FamilyTree() {
       {modalData && (
         <InfoModal modalData={modalData} setModalData={setModalData} people={people} />
       )}
-      
+
       {showDataModal && (
         <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full shadow-2xl border border-slate-200 dark:border-slate-800 relative">

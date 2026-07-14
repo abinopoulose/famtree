@@ -58,3 +58,8 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
 }
+
+/* ── Modal Utility Classes ───────────────────────── */
+body.modal-open #theme-bulb {
+  display: none !important;
+}

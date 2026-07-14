@@ -23,6 +23,7 @@ export default function Navbar() {
           <Link to="/" className={`text-sm font-semibold transition-colors ${isActive('/') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Home</Link>
           <Link to="/about" className={`text-sm font-semibold transition-colors ${isActive('/about') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>About</Link>
           <Link to="/family-tree" className={`text-sm font-semibold transition-colors ${isActive('/family-tree') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Family Tree</Link>
+          <Link to="/ancestors" className={`text-sm font-semibold transition-colors ${isActive('/ancestors') ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}>Ancestors</Link>
         </div>
 
         {/* Mobile Hamburger Toggle */}
@@ -41,7 +42,8 @@ export default function Navbar() {
         <div className="md:hidden absolute top-full left-0 w-full bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col p-4 z-[99]">
           <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-4 rounded-xl font-semibold mb-2 transition-colors ${isActive('/') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Home</Link>
           <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-4 rounded-xl font-semibold mb-2 transition-colors ${isActive('/about') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>About</Link>
-          <Link to="/family-tree" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-4 rounded-xl font-semibold transition-colors ${isActive('/family-tree') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Family Tree</Link>
+          <Link to="/family-tree" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-4 rounded-xl font-semibold mb-2 transition-colors ${isActive('/family-tree') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Family Tree</Link>
+          <Link to="/ancestors" onClick={() => setIsMobileMenuOpen(false)} className={`py-3 px-4 rounded-xl font-semibold transition-colors ${isActive('/ancestors') ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'}`}>Ancestors</Link>
         </div>
       )}
     </nav>

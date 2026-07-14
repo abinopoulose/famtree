@@ -1,8 +1,16 @@
+import { useEffect } from 'react';
 import { X, User } from 'lucide-react';
 import { CSV_COLUMNS } from '../constants';
 import { getAvatarFallback } from '../utils/graphAlgorithms';
 
 export default function InfoModal({ modalData, setModalData, people }: any) {
+  useEffect(() => {
+    if (modalData && modalData.raw) {
+      document.body.classList.add('modal-open');
+    }
+    return () => { document.body.classList.remove('modal-open'); };
+  }, [modalData]);
+
   if (!modalData || !modalData.raw) return null;
   
   const p = modalData.raw;
