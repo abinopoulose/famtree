@@ -39,7 +39,6 @@ export default function PersonNode({ data }: { data: any }) {
   const spouseGender = data.spouse?.raw?.Gender?.toLowerCase() || '';
   
   const mainIsFemale = mainGender === 'female';
-  const spouseIsMale = spouseGender === 'male';
   
   // Swap if the main person is female and the spouse is male (or if main is female and we want her on right)
   const swap = data.spouse && mainIsFemale;

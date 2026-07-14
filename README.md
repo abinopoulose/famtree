@@ -1,77 +1,33 @@
-# React + TypeScript + Vite
+# FamTree
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, dynamic Family Tree visualizer built with React, TypeScript, and Vite. 
 
-Currently, two official plugins are available:
+**Experience it live:** [famtree.abino.in](https://famtree.abino.in)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The standout feature of FamTree is its ability to **magically construct a beautiful, interactive family tree from a simple CSV file**. You don't need to write complex graph data structures or JSON—just fill out a spreadsheet.
 
-## React Compiler
+## How it Works: The CSV Magic
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+FamTree uses a simple CSV structure (`public/data.csv`) to map out your entire lineage. By simply defining who someone's parent or spouse is via their email address, the application's underlying graph algorithms automatically calculate generational depth, relationships, and layout positioning.
 
-Note: This will impact Vite dev & build performances.
+### CSV Structure
 
-## Expanding the ESLint configuration
+Your `data.csv` just needs the following columns:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Column | Description | Example |
+| :--- | :--- | :--- |
+| **Name** | Full name of the person | `George Thomas` |
+| **Gender** | `Male` or `Female` | `Male` |
+| **Phone** | Contact number | `9000000001` |
+| **Email** | Unique identifier for the person | `george.thomas@example.com` |
+| **Image** | Path to the person's avatar | `public/men/1.jpg` |
+| **Parent_Email** | Email of the person's parent (`NULL` if root) | `NULL` |
+| **Spouse_Email** | Email of the person's spouse (`NULL` if unmarried) | `mary.thomas@example.com` |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### The "Magic" Explained
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+1. **Flat to Graph:** The application fetches the CSV and parses it into a flat list of people.
+2. **Relationship Binding:** It dynamically links individuals by matching their unique `Email` against the `Parent_Email` and `Spouse_Email` fields.
+3. **Generational Layout Engine:** Using custom graph traversal algorithms, the engine calculates the "depth" of each node to group generations into strict, visually distinct horizontal rows.
+4. **Spouse Consolidation:** Husbands and wives are intelligently paired and visually grouped within the same layout component, ensuring a clean and organized tree instead of chaotic branching.
+5. **Interactive Exploration:** Once rendered, you can click on anyone in the tree to isolate their specific lineage, expand their immediate family, or view their profile details.
