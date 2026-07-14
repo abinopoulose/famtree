@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ── Theme Tokens ────────────────────────────────── */
+@theme {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ── Base Layer: body & global resets ────────────── */
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Restore borders for ReactFlow internals */
+  .react-flow__node,
+  .react-flow__edge,
+  .react-flow__handle,
+  .react-flow__controls,
+  .react-flow__controls-button,
+  .react-flow__minimap {
+    border-style: solid;
+  }
+
+  /* Ensure edge paths and markers are always visible */
+  .react-flow__edge-path,
+  .react-flow__connection-path {
+    stroke: #94a3b8;
+    stroke-width: 1.5;
+    fill: none;
+  }
+
+  .react-flow__edge.animated path {
+    stroke-dasharray: 5;
+    animation: dashdraw 0.5s linear infinite;
+  }
+
+  @keyframes dashdraw {
+    from { stroke-dashoffset: 10; }
+  }
+}
+
+/* ── Custom scrollbars ───────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
