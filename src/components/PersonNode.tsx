@@ -58,7 +58,8 @@ export default function PersonNode({ data }: { data: any }) {
   const leftIsSpouse = swap ? true : false;
   const rightIsSpouse = swap ? false : true;
 
-  const isRootPath = (data.isRoot || data.isPathPeak) && data.spouse && (leftData.isInPath || rightData.isInPath);
+  const hasEndpoint = data.isEndpoint || (data.spouse && data.spouse.isEndpoint);
+  const isRootPath = (data.isRoot || data.isPathPeak) && data.spouse && (leftData.isInPath || rightData.isInPath) && !hasEndpoint;
 
   return (
     <div className="relative">

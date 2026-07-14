@@ -6,9 +6,7 @@ export const getAvatarFallback = (gender: string) => {
   return isFemale ? '/female.svg' : '/male.svg';
 };
 
-const getRole = (p: any) => {
-  return p[CSV_COLUMNS.NAME];
-};
+
 
 const computeDepths = (people: any[]): Map<string, number> => {
   const depths = new Map<string, number>();
@@ -87,7 +85,6 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
       name: p[CSV_COLUMNS.NAME],
       image: p[CSV_COLUMNS.IMAGE] ? `/${p[CSV_COLUMNS.IMAGE].replace('public/', '')}` : getAvatarFallback(p[CSV_COLUMNS.GENDER]),
       fallbackImage: getAvatarFallback(p[CSV_COLUMNS.GENDER]),
-      role: getRole(p),
       isEndpoint: email === personA[CSV_COLUMNS.EMAIL] || email === personB[CSV_COLUMNS.EMAIL],
       isInPath: pathFound.includes(email),
       raw: p,
@@ -104,7 +101,6 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
             name: spouse[CSV_COLUMNS.NAME],
             image: spouse[CSV_COLUMNS.IMAGE] ? `/${spouse[CSV_COLUMNS.IMAGE].replace('public/', '')}` : getAvatarFallback(spouse[CSV_COLUMNS.GENDER]),
             fallbackImage: getAvatarFallback(spouse[CSV_COLUMNS.GENDER]),
-            role: getRole(spouse),
             raw: spouse,
             isDummy: false,
             isEndpoint: spouseEmail === personA[CSV_COLUMNS.EMAIL] || spouseEmail === personB[CSV_COLUMNS.EMAIL],
@@ -152,6 +148,16 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
       if (!adjList.has(parent)) adjList.set(parent, new Set());
       adjList.get(email)!.add(parent);
       adjList.get(parent)!.add(email);
+      
+      const parentObj = peopleMap.get(parent);
+      if (parentObj) {
+        const otherParent = parentObj[CSV_COLUMNS.SPOUSE_EMAIL];
+        if (otherParent && otherParent !== 'NULL') {
+          if (!adjList.has(otherParent)) adjList.set(otherParent, new Set());
+          adjList.get(email)!.add(otherParent);
+          adjList.get(otherParent)!.add(email);
+        }
+      }
     }
     if (spouse && spouse !== 'NULL') {
       if (!adjList.has(spouse)) adjList.set(spouse, new Set());
@@ -278,7 +284,18 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
     const parentEmail = child[CSV_COLUMNS.PARENT_EMAIL];
     
     if (parentEmail && parentEmail !== 'NULL') {
-      const sourceId = personToNodeId.get(parentEmail);
+      let sourceId = personToNodeId.get(parentEmail);
+      
+      if (!sourceId) {
+        const parentObj = peopleMap.get(parentEmail);
+        if (parentObj) {
+          const spouseEmail = parentObj[CSV_COLUMNS.SPOUSE_EMAIL];
+          if (spouseEmail && spouseEmail !== 'NULL') {
+            sourceId = personToNodeId.get(spouseEmail);
+          }
+        }
+      }
+      
       const targetId = personToNodeId.get(childEmail);
       
       if (sourceId && targetId && sourceId !== targetId) {
@@ -325,8 +342,28 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
   });
 
   initialNodes.forEach(node => {
-    node.data.isRoot = !hasIncoming.has(node.id);
-    node.data.isLeaf = !hasOutgoing.has(node.id);
+    const isLeaf = !hasOutgoing.has(node.id);
+    const isRoot = !hasIncoming.has(node.id);
+    node.data.isRoot = isRoot;
+    node.data.isLeaf = isLeaf;
+    
+    const generateRole = (rawPerson: any, hasSpouse: boolean) => {
+      const isFemale = rawPerson[CSV_COLUMNS.GENDER]?.toLowerCase() === 'female';
+      if (!isLeaf) {
+        return isFemale ? 'Mother' : 'Father';
+      } else if (hasSpouse) {
+        return isFemale ? 'Wife' : 'Husband';
+      } else if (isRoot) {
+        return isFemale ? 'Female' : 'Male';
+      } else {
+        return isFemale ? 'Daughter' : 'Son';
+      }
+    };
+
+    node.data.role = generateRole(node.data.raw, !!node.data.spouse);
+    if (node.data.spouse) {
+      node.data.spouse.role = generateRole(node.data.spouse.raw, true);
+    }
   });
 
   return { nodes: initialNodes, edges: initialEdges };
