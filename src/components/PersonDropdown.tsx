@@ -43,7 +43,7 @@ export default function PersonDropdown({ label, people, selectedPerson, onSelect
   });
 
   return (
-    <div ref={dropdownRef} className="flex flex-col gap-2 relative w-64 z-[70]">
+    <div ref={dropdownRef} className={`flex flex-col gap-2 relative w-64 ${isOpen ? 'z-[100]' : 'z-[70]'}`}>
       <label className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest ml-1">{label}</label>
       
       <button 

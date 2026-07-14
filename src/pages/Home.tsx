@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 export default function Home() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-80px)] text-center px-4 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
+      <img src="/fam_tree.svg" alt="FamTree Logo" className="w-32 h-32 md:w-48 md:h-48 mb-6 drop-shadow-xl" />
       <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent drop-shadow-sm">
         Welcome to FamTree
       </h1>

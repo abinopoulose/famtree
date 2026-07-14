@@ -3,9 +3,7 @@ import { CSV_COLUMNS } from '../constants';
 
 export const getAvatarFallback = (gender: string) => {
   const isFemale = gender && gender.trim().toLowerCase() === 'female';
-  return isFemale 
-    ? 'https://api.dicebear.com/7.x/adventurer/svg?seed=female&backgroundColor=b6e3f4' 
-    : 'https://api.dicebear.com/7.x/adventurer/svg?seed=male&backgroundColor=c0aede';
+  return isFemale ? '/female.svg' : '/male.svg';
 };
 
 const getRole = (p: any) => {
@@ -119,7 +117,7 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
     return nodeData;
   };
 
-  const addNode = (email: string, includeSpouse: boolean) => {
+  const addNode = (email: string, includeSpouse: boolean, isPathPeak: boolean = false) => {
     if (renderedNodes.has(email)) return;
     const p = peopleMap.get(email);
     if (!p) return;
@@ -131,7 +129,7 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
     initialNodes.push({
       id: email,
       type: 'person',
-      data: createNodeData(p, willIncludeSpouse),
+      data: { ...createNodeData(p, willIncludeSpouse), isPathPeak },
       position: { x: 0, y: 0 }
     });
     
@@ -250,19 +248,30 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
         }
       }
 
-      addNode(email, includeSpouse);
+      addNode(email, includeSpouse, isTopMost);
     }
   });
 
   const activeEdgeIds = new Set<string>();
+  const edgeAnimDirection = new Map<string, boolean>();
+  
   for (let i = 0; i < pathFound.length - 1; i++) {
-    const id1 = personToNodeId.get(pathFound[i]);
-    const id2 = personToNodeId.get(pathFound[i+1]);
-    if (id1 && id2 && id1 !== id2) {
-      activeEdgeIds.add(`e-${id1}-${id2}`);
-      activeEdgeIds.add(`e-${id2}-${id1}`);
+    const idFrom = personToNodeId.get(pathFound[i]);
+    const idTo = personToNodeId.get(pathFound[i+1]);
+    if (idFrom && idTo && idFrom !== idTo) {
+      activeEdgeIds.add(`e-${idFrom}-${idTo}`);
+      activeEdgeIds.add(`e-${idTo}-${idFrom}`);
+      
+      // If the actual edge is drawn idTo -> idFrom, it means it's flowing UP the visual tree.
+      // So relative to the SVG line (which always draws source->target, i.e. top->bottom),
+      // the animation needs to flow backwards (reverse).
+      edgeAnimDirection.set(`e-${idTo}-${idFrom}`, true);
+      edgeAnimDirection.set(`e-${idFrom}-${idTo}`, false);
     }
   }
+
+  const depthCounters = new Map<number, number>();
+  const sourceToOffset = new Map<string, number>();
 
   people.forEach(child => {
     const childEmail = child[CSV_COLUMNS.EMAIL];
@@ -273,20 +282,35 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
       const targetId = personToNodeId.get(childEmail);
       
       if (sourceId && targetId && sourceId !== targetId) {
+        if (!sourceToOffset.has(sourceId)) {
+          const depth = depths.get(sourceId) ?? 0;
+          const currentCounter = depthCounters.get(depth) ?? 0;
+          
+          let offsetLevel = 0;
+          if (currentCounter > 0) {
+            offsetLevel = currentCounter % 2 === 1 ? Math.ceil(currentCounter / 2) : -Math.ceil(currentCounter / 2);
+          }
+          
+          sourceToOffset.set(sourceId, offsetLevel);
+          depthCounters.set(depth, currentCounter + 1);
+        }
+        
+        const offsetLevel = sourceToOffset.get(sourceId)!;
         const edgeId = `e-${sourceId}-${targetId}`;
         const isActive = activeEdgeIds.has(edgeId) || activeEdgeIds.has(`e-${targetId}-${sourceId}`);
+        const isReverse = edgeAnimDirection.get(edgeId) === true;
+        
         if (!initialEdges.some(e => e.id === edgeId)) {
           initialEdges.push({
             id: edgeId,
             source: sourceId,
-            sourceHandle: `source-${parentEmail}`,
             target: targetId,
             targetHandle: `target-${childEmail}`,
             type: 'custom',
             animated: viewMode === 'all' ? false : isActive,
             zIndex: isActive ? 10 : 0,
             markerEnd: { type: MarkerType.ArrowClosed },
-            data: { isBlue: isActive, offsetLevel: 0 }
+            data: { isBlue: isActive, offsetLevel, isReverse }
           });
         }
       }

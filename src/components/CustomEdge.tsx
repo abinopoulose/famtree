@@ -40,6 +40,7 @@ export default function CustomEdge({
         strokeWidth: data?.isBlue ? 3 : 2,
         stroke: data?.isBlue ? '#3b82f6' : '#94a3b8',
         filter: data?.isBlue ? 'drop-shadow(0 0 4px rgba(59,130,246,0.5))' : 'none',
+        animationDirection: data?.isReverse ? 'reverse' : 'normal',
       }}
     />
   );

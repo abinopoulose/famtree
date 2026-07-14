@@ -19,13 +19,42 @@ function App() {
   return (
     <Router>
       <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
-        <Navbar isDark={isDark} toggleTheme={() => setIsDark(!isDark)} />
+        <Navbar />
         <main className="flex-1 flex flex-col w-full relative">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
             <Route path="/family-tree" element={<FamilyTree />} />
           </Routes>
+          
+          {/* Hanging CSS Bulb */}
+          <div 
+            className="absolute top-0 right-10 md:right-16 z-[9999] flex flex-col items-center cursor-pointer group origin-top animate-[sway_3s_ease-in-out_infinite] hover:animate-none"
+            onClick={() => setIsDark(!isDark)}
+            title="Toggle Theme"
+          >
+            {/* Wire */}
+            <div className={`w-[1.5px] h-8 transition-all duration-300 ease-out origin-top group-active:h-14 ${isDark ? 'bg-slate-700' : 'bg-slate-400'}`}></div>
+            
+            {/* Socket Base */}
+            <div className={`w-4 h-4 rounded-t-md transition-colors duration-500 z-10 flex flex-col justify-evenly relative ${isDark ? 'bg-gradient-to-b from-slate-700 to-slate-800 border border-slate-800' : 'bg-gradient-to-b from-slate-200 to-slate-400 border border-slate-400'}`}>
+               <div className={`w-[110%] -ml-[5%] h-[1px] ${isDark ? 'bg-slate-900' : 'bg-slate-500'}`}></div>
+               <div className={`w-[110%] -ml-[5%] h-[1px] ${isDark ? 'bg-slate-900' : 'bg-slate-500'}`}></div>
+            </div>
+            
+            {/* Glass Bulb */}
+            <div className={`w-8 h-8 -mt-[2px] rounded-full transition-all duration-300 relative flex items-center justify-center ${
+              isDark 
+                ? 'bg-gradient-to-br from-slate-800 to-slate-950 border border-slate-700 shadow-[inset_0_2px_4px_rgba(255,255,255,0.05)]' 
+                : 'bg-gradient-to-br from-yellow-50 to-yellow-300 border border-yellow-200 shadow-[0_10px_35px_rgba(250,204,21,0.8),_inset_0_-2px_8px_rgba(255,255,255,0.8)]'
+            }`}>
+               {/* Reflection highlight */}
+               <div className="absolute top-1 left-1.5 w-2.5 h-1.5 bg-white/70 rounded-full rotate-[-40deg] blur-[0.5px]"></div>
+               
+               {/* Filament */}
+               <div className={`absolute w-2.5 h-2.5 border-[1.5px] border-b-0 rounded-t-full transition-colors duration-500 mt-1 ${isDark ? 'border-slate-700' : 'border-orange-500 drop-shadow-[0_0_2px_rgba(249,115,22,1)]'}`}></div>
+            </div>
+          </div>
         </main>
       </div>
     </Router>

@@ -43,7 +43,6 @@ export default function PersonNode({ data }: { data: any }) {
           </div>
         </div>
 
-        <Handle type="source" id={`source-${pData.raw.Email}`} position={Position.Bottom} className="!w-1 !h-1 !bg-transparent !border-none" style={{ left: '50%' }} />
       </div>
     );
   };
@@ -59,7 +58,7 @@ export default function PersonNode({ data }: { data: any }) {
   const leftIsSpouse = swap ? true : false;
   const rightIsSpouse = swap ? false : true;
 
-  const isRootPath = data.isRoot && data.spouse && (leftData.isInPath || rightData.isInPath);
+  const isRootPath = (data.isRoot || data.isPathPeak) && data.spouse && (leftData.isInPath || rightData.isInPath);
 
   return (
     <div className="relative">

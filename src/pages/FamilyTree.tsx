@@ -166,7 +166,7 @@ export default function FamilyTree() {
               <Controls className="!bg-white/80 dark:!bg-slate-900/80 backdrop-blur-md !border-slate-200 dark:!border-slate-700 !rounded-xl !overflow-hidden shadow-lg !m-6 [&>button]:!border-slate-200 dark:[&>button]:!border-slate-700 [&>button]:dark:!bg-slate-900 [&>button]:dark:!fill-slate-300" />
             </ReactFlow>
           ) : (
-            <div className="h-full flex items-center justify-center text-slate-500 dark:text-slate-400 font-medium">
+            <div className="h-full flex items-center justify-center text-center px-6 text-slate-500 dark:text-slate-400 font-medium">
               {personA && personB ? 'No relationship path found between the selected people.' : 'Select two people to see their relationship.'}
             </div>
           )}
