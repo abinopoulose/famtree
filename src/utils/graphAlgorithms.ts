@@ -306,9 +306,6 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
     }
   }
 
-  const depthCounters = new Map<number, number>();
-  const sourceToOffset = new Map<string, number>();
-
   people.forEach(child => {
     const childEmail = child[CSV_COLUMNS.EMAIL];
     const parentEmail = child[CSV_COLUMNS.PARENT_EMAIL];
@@ -329,20 +326,6 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
       const targetId = personToNodeId.get(childEmail);
       
       if (sourceId && targetId && sourceId !== targetId) {
-        if (!sourceToOffset.has(sourceId)) {
-          const depth = depths.get(sourceId) ?? 0;
-          const currentCounter = depthCounters.get(depth) ?? 0;
-          
-          let offsetLevel = 0;
-          if (currentCounter > 0) {
-            offsetLevel = currentCounter % 2 === 1 ? Math.ceil(currentCounter / 2) : -Math.ceil(currentCounter / 2);
-          }
-          
-          sourceToOffset.set(sourceId, offsetLevel);
-          depthCounters.set(depth, currentCounter + 1);
-        }
-        
-        const offsetLevel = sourceToOffset.get(sourceId)!;
         const edgeId = `e-${sourceId}-${targetId}`;
         const isActive = activeEdgeIds.has(edgeId) || activeEdgeIds.has(`e-${targetId}-${sourceId}`);
         const isReverse = edgeAnimDirection.get(edgeId) === true;
@@ -357,7 +340,7 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
             animated: viewMode === 'all' ? false : isActive,
             zIndex: isActive ? 10 : 0,
             markerEnd: { type: MarkerType.ArrowClosed },
-            data: { isBlue: isActive, offsetLevel, isReverse }
+            data: { isBlue: isActive, offsetLevel: 0, isReverse }
           });
         }
       }

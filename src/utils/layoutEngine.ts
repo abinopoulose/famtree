@@ -42,7 +42,84 @@ export const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'T
     };
   });
 
+  // COMPLEX OVERLAP LOGIC
+  const getNodeCenterX = (nodeId: string) => {
+    const node = newNodes.find(n => n.id === nodeId);
+    if (!node) return 0;
+    const width = node.data.spouse ? 632 : 300;
+    return node.position.x + width / 2;
+  };
+
+  const edgesBySource = new Map<string, Edge[]>();
+  edges.forEach(edge => {
+    if (!edgesBySource.has(edge.source)) edgesBySource.set(edge.source, []);
+    edgesBySource.get(edge.source)!.push(edge);
+  });
+
+  const sourceSpans: { source: string; depth: number; start: number; end: number }[] = [];
+  
+  for (const [source, sourceEdges] of edgesBySource.entries()) {
+    const sourceNode = newNodes.find(n => n.id === source);
+    if (!sourceNode) continue;
+    
+    const sourceX = getNodeCenterX(source);
+    let minSpanX = sourceX;
+    let maxSpanX = sourceX;
+    
+    sourceEdges.forEach(edge => {
+      const targetX = getNodeCenterX(edge.target);
+      if (targetX < minSpanX) minSpanX = targetX;
+      if (targetX > maxSpanX) maxSpanX = targetX;
+    });
+    
+    const depth = typeof sourceNode.data.depth === 'number' ? sourceNode.data.depth : 0;
+    // Add padding to span to avoid visual crowding
+    sourceSpans.push({ source, depth, start: minSpanX - 30, end: maxSpanX + 30 });
+  }
+
+  const spansByDepth = new Map<number, typeof sourceSpans>();
+  sourceSpans.forEach(span => {
+    if (!spansByDepth.has(span.depth)) spansByDepth.set(span.depth, []);
+    spansByDepth.get(span.depth)!.push(span);
+  });
+
+  const sourceToOffset = new Map<string, number>();
+
+  for (const spans of spansByDepth.values()) {
+    spans.sort((a, b) => a.start - b.start);
+    const assignedLevels = new Map<number, typeof sourceSpans>();
+    
+    const levelOrder = [0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 7, -7];
+    
+    for (const span of spans) {
+      let assigned = false;
+      for (const level of levelOrder) {
+        const levelSpans = assignedLevels.get(level) || [];
+        const overlap = levelSpans.some(s => !(span.end < s.start || span.start > s.end));
+        if (!overlap) {
+          levelSpans.push(span);
+          assignedLevels.set(level, levelSpans);
+          sourceToOffset.set(span.source, level);
+          assigned = true;
+          break;
+        }
+      }
+      if (!assigned) {
+        // Fallback
+        sourceToOffset.set(span.source, 8); 
+      }
+    }
+  }
+
+  const newEdges = edges.map(edge => {
+    const offsetLevel = sourceToOffset.get(edge.source) || 0;
+    return {
+      ...edge,
+      data: { ...edge.data, offsetLevel }
+    };
+  });
+
   const bounds = minX === Infinity ? undefined : [[minX - 500, minY - 500], [maxX + 500, maxY + 500]];
 
-  return { nodes: newNodes, edges, bounds };
+  return { nodes: newNodes, edges: newEdges, bounds };
 };
