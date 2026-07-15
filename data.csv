@@ -2,7 +2,7 @@ Name,Gender,Phone,Email,Image,Parent_Email,Spouse_Email
 Abino Poulose,Male,,abinopoulose@outlook.com,,mopmarachery@gmail.com,
 Mebu Poulose,Male,,mebu_@outlook.com,,mopmarachery@gmail.com,
 M O Poulose,Male,,mopmarachery@gmail.com,,ouseph@example.com,
-Rageena George,Female,,rageenapram@gmail.com,,,mopmarachery@gmail.com
+Rageena George,Female,,rageenapram@gmail.com,,brijitha@example.com,mopmarachery@gmail.com
 ,,,,,,
 Varkey Ouseph,Male,,ouseph@example.com,,,saraouseph@example.com
 Sara Ouseph,Female,,saraouseph@example.com,,,
@@ -30,7 +30,51 @@ Basil George,,,basil3@example.com,,,timi@example.com
 ,,,,,,
 ,,,,,,
 Saji,Male,,saji@example.com,,,
-Saly Saji,Female,,salysaji@example.com,,,saji@example.com
+Saly Saji,Female,,salysaji@example.com,,ouseph@example.com,saji@example.com
 Basil Saji,Male,,basilsaji@example.com,,saji@example.com,
 Bilpira Basil,Female,,bipriya@example.com,,,basilsaji@example.com
 Geethu Saji,Female,,geethusaji@example.com,,saji@example.com,
+,,,,,,
+,,,,,,
+Susy Paily,Female,,susy@example.com,,ouseph@example.com,
+Paily Vandanath,Male,,paily@example.com,,,susy@example.com
+Basil Vandanath,Male,,basil7@example.com,,susy@example.com,
+Pavitha Paul,Female,,pavitha@example.com,,,basil7@example.com
+,,,,,,
+,,,,,,
+Moly Jose,Female,,molyjose@example.com,,ouseph@example.com,jose@example.com
+Jose,Male,,jose@example.com,,,
+Ema Jose,Female,,ema@example.com,,molyjose@example.com,
+Chippy Jose,Female,,chippy@example.com,,molyjose@example.com,
+,,,,,,
+,,,,,,
+,,,,,,
+,,,,,,
+Brijitha,Female,,brijitha@example.com,,,
+,,,,,,
+Manji Alex,Female,,manji.alex@example.com,,brijitha@example.com,alexander.a.s@example.com
+Alexander A S,Male,,alexander.a.s@example.com,,,
+Akshay Alex,Male,,akshay.alex@example.com,,manji.alex@example.com,
+,,,,,,
+Tinu V,Male,,tinu.v@example.com,,,
+Erin Tinku,Male,,erin.tinku@example.com,,tinu.v@example.com,
+Effrin Tinu,Male,,effrin.tinu@example.com,,tinu.v@example.com,
+Alphy Tinku,Female,,alphy.tinku@example.com,,brijitha@example.com,tinu.v@example.com
+,,,,,,
+Tom,,,tom@example.com,,,
+Christy Tom,Female,,christy.tom@example.com,,tom@example.com,
+Angel Tom,Female,,angel.tom@example.com,,tom@example.com,
+Jeseentha Tom,Female,,jeseentha.tom@example.com,,brijitha@example.com,tom@example.com
+,,,,,,
+Aby Antony,Male,,aby.antony@example.com,,,
+Letty Aby,Female,,letty.aby@example.com,,brijitha@example.com,aby.antony@example.com
+Flemi Aby,Female,,flemi.aby@example.com,,aby.antony@example.com,
+,,,,,,
+Annam Benny,Female,,annam.benny@example.com,,brijitha@example.com,benny@example.com
+Benny,Male,,benny@example.com,,,
+Anamika Benny,Female,,anamika.benny@example.com,,annam.benny@example.com,
+,,,,,,
+George P V,Male,,george.p.v@example.com,,brijitha@example.com,
+Bency George,Female,,bency.george@example.com,,,george.p.v@example.com
+Joby George,Male,,joby.george@example.com,,george.p.v@example.com,
+Jiyamol George,Female,,jiyamol.george@example.com,,george.p.v@example.com,
