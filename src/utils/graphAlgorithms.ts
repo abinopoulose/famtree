@@ -71,6 +71,17 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
 
   const peopleMap = new Map();
   people.forEach(p => peopleMap.set(p[CSV_COLUMNS.EMAIL], p));
+
+  // Fix missing reciprocal spouse links
+  peopleMap.forEach((p, email) => {
+    const spouseEmail = p[CSV_COLUMNS.SPOUSE_EMAIL];
+    if (spouseEmail && spouseEmail !== 'NULL') {
+      const spouse = peopleMap.get(spouseEmail);
+      if (spouse && (!spouse[CSV_COLUMNS.SPOUSE_EMAIL] || spouse[CSV_COLUMNS.SPOUSE_EMAIL] === 'NULL')) {
+        spouse[CSV_COLUMNS.SPOUSE_EMAIL] = email;
+      }
+    }
+  });
   const depths = computeDepths(people);
 
   const initialNodes: Node[] = [];
@@ -239,14 +250,33 @@ export const calculateGraph = (people: any[], personA: any, personB: any, viewMo
 
   emailsToRender.forEach(email => {
     if (!renderedNodes.has(email)) {
+      
+      let handledByOther = false;
+      emailsToRender.forEach(otherEmail => {
+        if (otherEmail !== email && !renderedNodes.has(otherEmail)) {
+          const otherP = peopleMap.get(otherEmail);
+          if (otherP && otherP[CSV_COLUMNS.SPOUSE_EMAIL] === email) {
+            const myP = peopleMap.get(email);
+            if (myP && myP[CSV_COLUMNS.SPOUSE_EMAIL] === otherEmail) {
+              if (otherEmail < email) handledByOther = true;
+            } else {
+              handledByOther = true;
+            }
+          }
+        }
+      });
+      
+      if (handledByOther) return;
+
       const p = peopleMap.get(email);
       const spouseEmail = p?.[CSV_COLUMNS.SPOUSE_EMAIL];
       
       const nodeDepth = depths.get(email) ?? 0;
       const isTopMost = nodeDepth === minDepth;
+      const isEndpoint = email === personA[CSV_COLUMNS.EMAIL] || email === personB[CSV_COLUMNS.EMAIL];
       
       let includeSpouse = false;
-      if (viewMode === 'spouse' || viewMode === 'all' || isTopMost) {
+      if (viewMode === 'spouse' || viewMode === 'all' || (isTopMost && !isEndpoint)) {
         includeSpouse = true;
       } else if (spouseEmail && spouseEmail !== 'NULL') {
         if (emailsToRender.has(spouseEmail) || spouseEmail === personA[CSV_COLUMNS.EMAIL] || spouseEmail === personB[CSV_COLUMNS.EMAIL]) {

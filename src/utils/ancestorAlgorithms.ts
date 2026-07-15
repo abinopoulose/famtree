@@ -8,6 +8,17 @@ export const calculateAncestorsGraph = (people: any[], targetPerson: any, onInfo
   const peopleMap = new Map();
   people.forEach(p => peopleMap.set(p[CSV_COLUMNS.EMAIL], p));
 
+  // Fix missing reciprocal spouse links
+  peopleMap.forEach((p, email) => {
+    const spouseEmail = p[CSV_COLUMNS.SPOUSE_EMAIL];
+    if (spouseEmail && spouseEmail !== 'NULL') {
+      const spouse = peopleMap.get(spouseEmail);
+      if (spouse && (!spouse[CSV_COLUMNS.SPOUSE_EMAIL] || spouse[CSV_COLUMNS.SPOUSE_EMAIL] === 'NULL')) {
+        spouse[CSV_COLUMNS.SPOUSE_EMAIL] = email;
+      }
+    }
+  });
+
   const ancestorEmails = new Set<string>();
   const depths = new Map<string, number>();
   const queue: [string, number][] = [[targetPerson[CSV_COLUMNS.EMAIL], 0]];
@@ -111,6 +122,25 @@ export const calculateAncestorsGraph = (people: any[], targetPerson: any, onInfo
 
   // Add all ancestors to the graph
   ancestorEmails.forEach(email => {
+    if (renderedNodes.has(email)) return;
+    
+    let handledByOther = false;
+    ancestorEmails.forEach(otherEmail => {
+      if (otherEmail !== email && !renderedNodes.has(otherEmail)) {
+        const otherP = peopleMap.get(otherEmail);
+        if (otherP && otherP[CSV_COLUMNS.SPOUSE_EMAIL] === email) {
+          const myP = peopleMap.get(email);
+          if (myP && myP[CSV_COLUMNS.SPOUSE_EMAIL] === otherEmail) {
+            if (otherEmail < email) handledByOther = true;
+          } else {
+            handledByOther = true;
+          }
+        }
+      }
+    });
+    
+    if (handledByOther) return;
+
     // We group spouses together if both are ancestors. 
     // We can always pass includeSpouse=true because it checks if spouse is in ancestorEmails
     addNode(email, true);
